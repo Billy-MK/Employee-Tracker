@@ -1,7 +1,6 @@
 const mysql = require('mysql');
 const inquirer = require('inquirer');
 const cTable = require('console.table');
-const { allowedNodeEnvironmentFlags } = require('node:process');
 const dotenv = require('dotenv').config()
 
 // create the connection information for the sql database
@@ -55,4 +54,32 @@ const main = () => {
                 break;
         }
     })
+}
+
+const viewDepartments = () => {
+
+}
+
+const viewRoles = () => {
+    
+}
+
+const viewEmployees = () => {
+    
+}
+
+const addDepartments = () => {
+    
+}
+
+const addRoles = () => {
+    
+}
+
+const addEmployees = () => {
+    
+}
+
+const updateEmployeeRoles = () => {
+    
 }
