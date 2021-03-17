@@ -83,3 +83,11 @@ const addEmployees = () => {
 const updateEmployeeRoles = () => {
     
 }
+
+// connect to the mysql server and sql database
+connection.connect((err) => {
+    if (err) throw err;
+    // run the main function after the connection is made to prompt the user
+    main();
+  });
+  
