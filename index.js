@@ -171,6 +171,7 @@ const addRoles = () => {
             {
                 name: 'department_name',
                 type: 'rawlist',
+                // The choices() function generates an array of choices based on the department names from the query above
                 choices() {
                     const choiceArray = [];
                     res.forEach((department) => {
@@ -181,12 +182,14 @@ const addRoles = () => {
                 message: 'What department would you like this role to belong to?',
             }
         ]).then((answer) => {
+            // chosenDepartment is a variable which will store the ID of the department, rather than using the name (since role takes department_id not department_name)
             let chosenDepartment;
             res.forEach((department) => {
                 if (department.name === answer.department_name) {
                     chosenDepartment = department.id;
                 }
             })
+            // Role is generated and inserted based on answers and chosenDepartment
             connection.query('INSERT INTO roles SET ?', {
                 title: answer.title,
                 salary: answer.salary,
