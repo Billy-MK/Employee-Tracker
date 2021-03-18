@@ -153,7 +153,51 @@ const addDepartments = () => {
 }
 
 const addRoles = () => {
-    
+    // Queries for all the departments, to determine which department the role will be added to
+    connection.query('SELECT * FROM departments', (err, res) => {
+        if (err) throw err;
+        // Prompts user for information regarding the role
+        inquirer.prompt([
+            {
+                name: 'title',
+                type: 'input',
+                message: 'What is the title of the role you would like to create?',
+            },
+            {
+                name: 'salary',
+                type: 'input',
+                message: 'What is the salary for this role?'
+            },
+            {
+                name: 'department_name',
+                type: 'rawlist',
+                choices() {
+                    const choiceArray = [];
+                    res.forEach((department) => {
+                      choiceArray.push(department.name);
+                    });
+                    return choiceArray;
+                  },
+                message: 'What department would you like this role to belong to?',
+            }
+        ]).then((answer) => {
+            let chosenDepartment;
+            res.forEach((department) => {
+                if (department.name === answer.department_name) {
+                    chosenDepartment = department.id;
+                }
+            })
+            connection.query('INSERT INTO roles SET ?', {
+                title: answer.title,
+                salary: answer.salary,
+                department_id: chosenDepartment
+            }, (err) => {
+                if (err) throw err;
+                console.log("Your role has been created!")
+                main();
+            })
+        })
+    })
 }
 
 const addEmployees = () => {
