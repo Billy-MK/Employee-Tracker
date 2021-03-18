@@ -79,7 +79,7 @@ const viewDepartments = () => {
 }
 
 const viewRoles = () => {
-    connection.query('SELECT * FROM roles', (err, res) => {
+    connection.query('SELECT roles.id, roles.title, roles.salary, departments.name FROM roles INNER JOIN departments ON roles.department_id = departments.id;', (err, res) => {
         if (err) throw err;
 
         // Create an array which will be filled with other arrays containing each row's data. We start with a single array of column headers.
@@ -91,7 +91,7 @@ const viewRoles = () => {
             rowArray.push(item.id);
             rowArray.push(item.title);
             rowArray.push(item.salary);
-            rowArray.push(item.department_id);
+            rowArray.push(item.name);
             consoleTableArray.push(rowArray);
         })
 
@@ -103,11 +103,11 @@ const viewRoles = () => {
 }
 
 const viewEmployees = () => {
-    connection.query('SELECT * FROM employees', (err, res) => {
+    connection.query('SELECT employees.id, employees.first_name, employees.last_name, roles.title, employees.manager_id, roles.salary, departments.name FROM employees INNER JOIN roles ON employees.role_id = roles.id INNER JOIN departments ON roles.department_id = departments.id', (err, res) => {
         if (err) throw err;
 
         // Create an array which will be filled with other arrays containing each row's data. We start with a single array of column headers.
-        var consoleTableArray = [['ID ', 'First Name ', 'Last Name ', 'Role ', 'Manager ']];
+        var consoleTableArray = [['ID ', 'First Name ', 'Last Name ', 'Role ', 'Manager ', 'Salary ', 'Department ']];
         
         // Each row's data is put into rowArray, which is then pushed to consoleTableArray
         res.forEach((item) => {
@@ -115,12 +115,14 @@ const viewEmployees = () => {
             rowArray.push(item.id);
             rowArray.push(item.first_name);
             rowArray.push(item.last_name);
-            rowArray.push(item.role_id);
-            if (item.manager_id === null) {
-                rowArray.push('No Manager')
+            rowArray.push(item.title);
+            if (item.manager_id) {
+                rowArray.push(item.manager_id)
             } else {
-                rowArray.push(item.manager_id);
+                rowArray.push('No Manager')
             }
+            rowArray.push(item.salary);
+            rowArray.push(item.name);
             consoleTableArray.push(rowArray);
         })
 
@@ -132,7 +134,22 @@ const viewEmployees = () => {
 }
 
 const addDepartments = () => {
-    
+    inquirer.prompt([
+        {
+            name: 'name',
+            type: 'input',
+            message: 'What is the name of the department you would like to create?',
+        }
+    ]).then((answer) => {
+        connection.query('INSERT INTO departments SET ?', {
+            name: answer.name
+        }, (err) => {
+            if (err) throw err;
+            console.log("Your department has been created!");
+
+            main();
+        })
+    })
 }
 
 const addRoles = () => {
