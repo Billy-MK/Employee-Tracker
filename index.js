@@ -116,7 +116,11 @@ const viewEmployees = () => {
             rowArray.push(item.first_name);
             rowArray.push(item.last_name);
             rowArray.push(item.role_id);
-            rowArray.push(item.manager_id);
+            if (item.manager_id === null) {
+                rowArray.push('No Manager')
+            } else {
+                rowArray.push(item.manager_id);
+            }
             consoleTableArray.push(rowArray);
         })
 
