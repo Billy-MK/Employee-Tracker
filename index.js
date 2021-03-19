@@ -153,7 +153,7 @@ const addDepartments = () => {
 }
 
 const addRoles = () => {
-    // Queries for all the departments, to determine which department the role will be added to
+    // Queries for all the roles, to determine which department the role will be added to
     connection.query('SELECT * FROM departments', (err, res) => {
         if (err) throw err;
         // Prompts user for information regarding the role
@@ -204,7 +204,54 @@ const addRoles = () => {
 }
 
 const addEmployees = () => {
-    
+     // Queries for all the roles and employees, to determine which role the employee will be assigned and who their manager will be
+     connection.query('SELECT * FROM roles', (err, res) => {
+        if (err) throw err;
+        // Prompts user for information regarding the role
+        inquirer.prompt([
+            {
+                name: 'first_name',
+                type: 'input',
+                message: "What is the employee's first name?",
+            },
+            {
+                name: 'last_name',
+                type: 'input',
+                message: "What is the employee's last name?"
+            },
+            {
+                name: 'role',
+                type: 'rawlist',
+                // The choices() function generates an array of choices based on the department names from the query above
+                choices() {
+                    const choiceArray = [];
+                    res.forEach((role) => {
+                      choiceArray.push(role.title);
+                    });
+                    return choiceArray;
+                  },
+                message: "What is this employee's role?",
+            }
+        ]).then((answer) => {
+            // chosenRole is a variable which will store the ID of the role, rather than using the name
+            let chosenRole;
+            res.forEach((role) => {
+                if (role.title === answer.role) {
+                    chosenRole = role.id;
+                }
+            })
+            // Role is generated and inserted based on answers and chosenDepartment
+            connection.query('INSERT INTO employees SET ?', {
+                first_name: answer.first_name,
+                last_name: answer.last_name,
+                role_id: chosenRole
+            }, (err) => {
+                if (err) throw err;
+                console.log("Your employee has been created!")
+                main();
+            })
+        })
+    })
 }
 
 const updateEmployeeRoles = () => {
