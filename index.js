@@ -24,7 +24,7 @@ const main = () => {
             name: 'mainMenu',
             type: 'list',
             message: 'What would you like to do?',
-            choices: ['View Departments', 'View Roles', 'View Employees', 'Add Departments', 'Add Roles', 'Add Employees', 'Update Employee Role', 'Update Employee Manager'],
+            choices: ['View Departments', 'View Roles', 'View Employees', 'Add Departments', 'Add Roles', 'Add Employees', 'Update Employee Role', 'Update Employee Manager', 'Delete Department', 'Delete Role', 'Delete Employee'],
         }
     ).then((answer) => {
         switch(answer.mainMenu) {
@@ -51,6 +51,15 @@ const main = () => {
                 break;
             case 'Update Employee Manager':
                 updateEmployeeManagers();
+                break;
+            case 'Delete Department':
+                deleteDepartment();
+                break;
+            case 'Delete Role':
+                deleteRole();
+                break;
+            case 'Delete Employee':
+                deleteEmployee();
                 break;
             default:
                 console.log(`Invalid action: ${answer.action}`);
@@ -117,21 +126,21 @@ const viewEmployees = () => {
             // Each row's data is put into rowArray, which is then pushed to consoleTableArray
             res.forEach((item) => {
                 var rowArray = [];
-                rowArray.push(item.id);
-                rowArray.push(item.first_name);
-                rowArray.push(item.last_name);
-                rowArray.push(item.title);
+                rowArray.push(item.id + " ");
+                rowArray.push(item.first_name + " ");
+                rowArray.push(item.last_name + " ");
+                rowArray.push(item.title + " ");
                 if (item.manager_id) {
                     employeeRes.forEach((employee) => {
                         if (employee.id === item.manager_id) {
-                            rowArray.push(employee.first_name + " " + employee.last_name);
+                            rowArray.push(employee.first_name + " " + employee.last_name + " ");
                         }
                     })
                 } else {
-                    rowArray.push('No Manager')
+                    rowArray.push('No Manager ')
                 }
-                rowArray.push(item.salary);
-                rowArray.push(item.name);
+                rowArray.push(item.salary + " ");
+                rowArray.push(item.name + " ");
                 consoleTableArray.push(rowArray);
             })
     
@@ -247,6 +256,7 @@ const addEmployees = () => {
                     name: 'manager',
                     type: 'rawlist',
                     choices() {
+                        const choiceArray = [];
                         employeeRes.forEach((employee) => {
                           choiceArray.push({
                               name: employee.first_name + " " + employee.last_name,
@@ -391,10 +401,102 @@ const updateEmployeeManagers = () => {
     })
 }
 
+const deleteDepartment = () => {
+    connection.query('SELECT * FROM departments', (err, res) => {
+        if (err) throw err;
+        inquirer.prompt([
+            {
+                name: 'department',
+                message: 'Which department would you like to delete?',
+                type: 'rawlist',
+                choices() {
+                    const choiceArray = [];
+                    res.forEach((department) => {
+                      choiceArray.push(
+                          {
+                            name: department.name,
+                            value: department.id
+                          }
+                      );
+                    });
+                    return choiceArray;
+                }
+            }
+        ]).then((answer) => {
+            connection.query('DELETE FROM departments WHERE ?', [{
+                id: answer.department
+            }])
+            console.log("Department deleted!");
+            main();
+        })
+    })
+}
+
+const deleteRole = () => {
+    connection.query('SELECT * FROM roles', (err, res) => {
+        if (err) throw err;
+        inquirer.prompt([
+            {
+                name: 'role',
+                message: 'Which role would you like to delete?',
+                type: 'rawlist',
+                choices() {
+                    const choiceArray = [];
+                    res.forEach((role) => {
+                      choiceArray.push(
+                          {
+                            name: role.title,
+                            value: role.id
+                          }
+                      );
+                    });
+                    return choiceArray;
+                }
+            }
+        ]).then((answer) => {
+            connection.query('DELETE FROM roles WHERE ?', [{
+                id: answer.role
+            }])
+            console.log("Role deleted!");
+            main();
+        })
+    })
+}
+
+const deleteEmployee = () => {
+    connection.query('SELECT * FROM employees', (err, res) => {
+        if (err) throw err;
+        inquirer.prompt([
+            {
+                name: 'employee',
+                message: 'Which employee would you like to delete?',
+                type: 'rawlist',
+                choices() {
+                    const choiceArray = [];
+                    res.forEach((employee) => {
+                      choiceArray.push(
+                          {
+                            name: employee.first_name + " " + employee.last_name,
+                            value: employee.id
+                          }
+                      );
+                    });
+                    return choiceArray;
+                }
+            }
+        ]).then((answer) => {
+            connection.query('DELETE FROM employees WHERE ?', [{
+                id: answer.employee
+            }])
+            console.log("Employee deleted!");
+            main();
+        })
+    })
+}
+
 // connect to the mysql server and sql database
 connection.connect((err) => {
     if (err) throw err;
     // run the main function after the connection is made
     main();
   });
-  
