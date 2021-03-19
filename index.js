@@ -83,7 +83,7 @@ const viewRoles = () => {
         if (err) throw err;
 
         // Create an array which will be filled with other arrays containing each row's data. We start with a single array of column headers.
-        var consoleTableArray = [['ID ', 'Title ', 'Salary ', 'Department ID ']];
+        var consoleTableArray = [['ID ', 'Title ', 'Salary ', 'Department ']];
         
         // Each row's data is put into rowArray, which is then pushed to consoleTableArray
         res.forEach((item) => {
@@ -205,71 +205,128 @@ const addRoles = () => {
 
 const addEmployees = () => {
      // Queries for all the roles and employees, to determine which role the employee will be assigned and who their manager will be
-     connection.query('SELECT * FROM roles', (err, res) => {
-        if (err) throw err;
-        // Prompts user for information regarding the role
-        inquirer.prompt([
-            {
-                name: 'first_name',
-                type: 'input',
-                message: "What is the employee's first name?",
-            },
-            {
-                name: 'last_name',
-                type: 'input',
-                message: "What is the employee's last name?"
-            },
-            {
-                name: 'role',
-                type: 'rawlist',
-                // The choices() function generates an array of choices based on the department names from the query above
-                choices() {
-                    const choiceArray = [];
-                    res.forEach((role) => {
-                      choiceArray.push(role.title);
-                    });
-                    return choiceArray;
-                  },
-                message: "What is this employee's role?",
-            },
-            {
-                name: 'manager',
-                type: 'input',
-                message: "Enter the ID of this person's manager, or 0 if they have no manager."
-            },
-        ]).then((answer) => {
-            // chosenRole is a variable which will store the ID of the role, rather than using the name
-            let chosenRole;
-            res.forEach((role) => {
-                if (role.title === answer.role) {
-                    chosenRole = role.id;
-                }
+     connection.query('SELECT * FROM employees', (err, employeeRes) => {
+         if (err) throw err;
+         connection.query('SELECT * FROM roles', (err, res) => {
+            if (err) throw err;
+            // Prompts user for information regarding the role
+            inquirer.prompt([
+                {
+                    name: 'first_name',
+                    type: 'input',
+                    message: "What is the employee's first name?",
+                },
+                {
+                    name: 'last_name',
+                    type: 'input',
+                    message: "What is the employee's last name?"
+                },
+                {
+                    name: 'role',
+                    type: 'rawlist',
+                    // The choices() function generates an array of choices based on the department names from the query above
+                    choices() {
+                        const choiceArray = [];
+                        res.forEach((role) => {
+                          choiceArray.push(role.title);
+                        });
+                        return choiceArray;
+                      },
+                    message: "What is this employee's role?",
+                },
+                {
+                    name: 'manager',
+                    type: 'rawlist',
+                    choices() {
+                        employeeRes.forEach((employee) => {
+                          choiceArray.push({
+                              name: employee.first_name + " " + employee.last_name,
+                              value: employee.id
+                          });
+                        });
+                        return choiceArray;
+                      },
+                    message: "Who is this person's manager?."
+                },
+            ]).then((answer) => {
+                // chosenRole is a variable which will store the ID of the role, rather than using the name
+                let chosenRole;
+                res.forEach((role) => {
+                    if (role.title === answer.role) {
+                        chosenRole = role.id;
+                    }
+                })
+    
+                // Role is generated and inserted based on answers and chosenDepartment
+                connection.query('INSERT INTO employees SET ?', {
+                    first_name: answer.first_name,
+                    last_name: answer.last_name,
+                    role_id: chosenRole,
+                    manager_id: answer.manager
+                }, (err) => {
+                    if (err) throw err;
+                    console.log("Your employee has been created!")
+                    main();
+                })
             })
+        })
+     })
+}
 
-            let chosenManager;
-            if (answer.manager === '0') {
-                chosenManager = NULL;
-            } else {
-                chosenManager = answer.manager;
-            }
-            
-            // Role is generated and inserted based on answers and chosenDepartment
-            connection.query('INSERT INTO employees SET ?', {
-                first_name: answer.first_name,
-                last_name: answer.last_name,
-                role_id: chosenRole,
-                manager_id: chosenManager
-            }, (err) => {
-                if (err) throw err;
-                console.log("Your employee has been created!")
+const updateEmployeeRoles = () => {
+    connection.query('SELECT * FROM roles', (err, roleRes) => {
+        if (err) throw err;
+        connection.query('SELECT * FROM employees', (err, res) => {
+            if (err) throw err;
+            inquirer.prompt([
+                {
+                    name: 'employee',
+                    message: 'Which employee would you like to change the role of?',
+                    type: 'rawlist',
+                    choices() {
+                        const choiceArray = [];
+                        res.forEach((employee) => {
+                          choiceArray.push(
+                              {
+                                name: employee.first_name + ' ' + employee.last_name,
+                                value: employee.id
+                              }
+                          );
+                        });
+                        return choiceArray;
+                    }
+                },
+                {
+                    name: 'newRole',
+                    message: "What would you like to change this employee's role to?",
+                    type: 'rawlist',
+                    choices() {
+                        const choiceArray = [];
+                        roleRes.forEach((role) => {
+                          choiceArray.push(
+                              {
+                                name: role.title,
+                                value: role.id
+                              }
+                          );
+                        });
+                        return choiceArray;
+                    }
+                }
+            ]).then((answers) => {
+                connection.query('UPDATE employees SET ? WHERE ?', [
+                    {
+                        role_id: answers.newRole
+                    },
+                    {
+                        id: answers.employee
+                    }
+                ])
+                console.log("Your employee's role has been updated!");
                 main();
             })
         })
     })
-}
-
-const updateEmployeeRoles = () => {
-    
 }
 
 // connect to the mysql server and sql database
