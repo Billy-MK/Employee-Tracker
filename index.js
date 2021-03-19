@@ -24,7 +24,7 @@ const main = () => {
             name: 'mainMenu',
             type: 'list',
             message: 'What would you like to do?',
-            choices: ['View Departments', 'View Roles', 'View Employees', 'Add Departments', 'Add Roles', 'Add Employees', 'Update Employee Roles'],
+            choices: ['View Departments', 'View Roles', 'View Employees', 'Add Departments', 'Add Roles', 'Add Employees', 'Update Employee Role', 'Update Employee Manager'],
         }
     ).then((answer) => {
         switch(answer.mainMenu) {
@@ -46,8 +46,11 @@ const main = () => {
             case 'Add Employees':
                 addEmployees();
                 break;
-            case 'Update Employee Roles':
+            case 'Update Employee Role':
                 updateEmployeeRoles();
+                break;
+            case 'Update Employee Manager':
+                updateEmployeeManagers();
                 break;
             default:
                 console.log(`Invalid action: ${answer.action}`);
@@ -325,6 +328,59 @@ const updateEmployeeRoles = () => {
                 console.log("Your employee's role has been updated!");
                 main();
             })
+        })
+    })
+}
+
+const updateEmployeeManagers = () => {
+    connection.query('SELECT * FROM employees', (err, res) => {
+        if (err) throw err;
+        inquirer.prompt([
+            {
+                name: 'employee',
+                message: 'Which employee would you like to change the manager of?',
+                type: 'rawlist',
+                choices() {
+                    const choiceArray = [];
+                    res.forEach((employee) => {
+                      choiceArray.push(
+                          {
+                            name: employee.first_name + ' ' + employee.last_name,
+                            value: employee.id
+                          }
+                      );
+                    });
+                    return choiceArray;
+                }
+            },
+            {
+                name: 'newManager',
+                message: 'Which employee would you like to assign to be their manager?',
+                type: 'rawlist',
+                choices() {
+                    const choiceArray = [];
+                    res.forEach((employee) => {
+                      choiceArray.push(
+                          {
+                            name: employee.first_name + ' ' + employee.last_name,
+                            value: employee.id
+                          }
+                      );
+                    });
+                    return choiceArray;
+                }
+            }
+        ]).then((answers) => {
+            connection.query('UPDATE employees SET ? WHERE ?', [
+                {
+                    manager_id: answers.newManager
+                },
+                {
+                    id: answers.employee
+                }
+            ])
+            console.log("Your employee's manager has been changed!");
+            main();
         })
     })
 }
