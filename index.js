@@ -231,7 +231,12 @@ const addEmployees = () => {
                     return choiceArray;
                   },
                 message: "What is this employee's role?",
-            }
+            },
+            {
+                name: 'manager',
+                type: 'input',
+                message: "Enter the ID of this person's manager, or 0 if they have no manager."
+            },
         ]).then((answer) => {
             // chosenRole is a variable which will store the ID of the role, rather than using the name
             let chosenRole;
@@ -240,11 +245,20 @@ const addEmployees = () => {
                     chosenRole = role.id;
                 }
             })
+
+            let chosenManager;
+            if (answer.manager === '0') {
+                chosenManager = NULL;
+            } else {
+                chosenManager = answer.manager;
+            }
+            
             // Role is generated and inserted based on answers and chosenDepartment
             connection.query('INSERT INTO employees SET ?', {
                 first_name: answer.first_name,
                 last_name: answer.last_name,
-                role_id: chosenRole
+                role_id: chosenRole,
+                manager_id: chosenManager
             }, (err) => {
                 if (err) throw err;
                 console.log("Your employee has been created!")
