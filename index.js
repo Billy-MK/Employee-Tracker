@@ -106,33 +106,39 @@ const viewRoles = () => {
 }
 
 const viewEmployees = () => {
-    connection.query('SELECT employees.id, employees.first_name, employees.last_name, roles.title, employees.manager_id, roles.salary, departments.name FROM employees INNER JOIN roles ON employees.role_id = roles.id INNER JOIN departments ON roles.department_id = departments.id', (err, res) => {
+    connection.query('SELECT * FROM employees', (err, employeeRes) => {
         if (err) throw err;
-
-        // Create an array which will be filled with other arrays containing each row's data. We start with a single array of column headers.
-        var consoleTableArray = [['ID ', 'First Name ', 'Last Name ', 'Role ', 'Manager ', 'Salary ', 'Department ']];
-        
-        // Each row's data is put into rowArray, which is then pushed to consoleTableArray
-        res.forEach((item) => {
-            var rowArray = [];
-            rowArray.push(item.id);
-            rowArray.push(item.first_name);
-            rowArray.push(item.last_name);
-            rowArray.push(item.title);
-            if (item.manager_id) {
-                rowArray.push(item.manager_id)
-            } else {
-                rowArray.push('No Manager')
-            }
-            rowArray.push(item.salary);
-            rowArray.push(item.name);
-            consoleTableArray.push(rowArray);
+        connection.query('SELECT employees.id, employees.first_name, employees.last_name, roles.title, employees.manager_id, roles.salary, departments.name FROM employees INNER JOIN roles ON employees.role_id = roles.id INNER JOIN departments ON roles.department_id = departments.id', (err, res) => {
+            if (err) throw err;
+    
+            // Create an array which will be filled with other arrays containing each row's data. We start with a single array of column headers.
+            var consoleTableArray = [['ID ', 'First Name ', 'Last Name ', 'Role ', 'Manager ', 'Salary ', 'Department ']];
+            
+            // Each row's data is put into rowArray, which is then pushed to consoleTableArray
+            res.forEach((item) => {
+                var rowArray = [];
+                rowArray.push(item.id);
+                rowArray.push(item.first_name);
+                rowArray.push(item.last_name);
+                rowArray.push(item.title);
+                if (item.manager_id) {
+                    employeeRes.forEach((employee) => {
+                        if (employee.id === item.manager_id) {
+                            rowArray.push(employee.first_name + " " + employee.last_name);
+                        }
+                    })
+                } else {
+                    rowArray.push('No Manager')
+                }
+                rowArray.push(item.salary);
+                rowArray.push(item.name);
+                consoleTableArray.push(rowArray);
+            })
+    
+            // Use the console-table package to print the data
+            consoleTable(consoleTableArray);
+            main();
         })
-
-        // Use the console-table package to print the data
-        consoleTable(consoleTableArray);
-
-        main();
     })
 }
 
